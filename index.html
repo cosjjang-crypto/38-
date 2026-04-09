@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>교육전문직 시험 학습 관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F8F9FB;
+    --surface: #FFFFFF;
+    --surface2: #F3F4F6;
+    --border: #E5E7EB;
+    --border2: #D1D5DB;
+    --text: #111827;
+    --text2: #6B7280;
+    --text3: #9CA3AF;
+    --blue: #2563EB;
+    --blue-bg: #EFF6FF;
+    --green: #059669;
+    --green-bg: #ECFDF5;
+    --red: #DC2626;
+    --red-bg: #FEF2F2;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
+  
+  /* Layout */
+  .app { max-width: 960px; margin: 0 auto; padding: 20px 16px 60px; }
+  
+  /* Header */
+  .header { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .header-title { font-size: 18px; font-weight: 700; color: var(--text); }
+  .header-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
+  .countdown { text-align: center; background: var(--red-bg); border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 10px 18px; min-width: 80px; }
+  .countdown-num { font-size: 32px; font-weight: 700; color: var(--red); line-height: 1; }
+  .countdown-lbl { font-size: 11px; color: #EF4444; margin-top: 2px; }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .metric { background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .metric-val { font-size: 20px; font-weight: 600; color: var(--text); }
+  .metric-lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-top: 14px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--blue) 0%, #60A5FA 100%); border-radius: 3px; transition: width 0.5s ease; }
+  .progress-text { display: flex; justify-content: space-between; margin-top: 5px; font-size: 11px; color: var(--text3); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 5px; margin-bottom: 16px; box-shadow: var(--shadow); overflow-x: auto; }
+  .tab-btn { flex: 1; min-width: 80px; padding: 8px 14px; border: none; background: transparent; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; white-space: nowrap; transition: all 0.15s; font-family: inherit; }
+  .tab-btn.active { background: var(--blue); color: #fff; box-shadow: 0 1px 4px rgba(37,99,235,0.3); }
+  .tab-btn:hover:not(.active) { background: var(--surface2); color: var(--text); }
+  
+  /* Cards */
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+  .card + .card { margin-top: 10px; }
+  
+  /* Today */
+  .day-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 10px; transition: border-color 0.2s; }
+  .day-card.current { border-left: 3px solid var(--blue); }
+  .day-card.done-card { border-left: 3px solid var(--green); }
+  .day-card.faded { opacity: 0.6; }
+  .day-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .day-badge { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .today-label { font-size: 11px; font-weight: 600; background: var(--blue-bg); color: var(--blue); padding: 3px 8px; border-radius: 20px; }
+  .phase-tag { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+  .day-title-text { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; }
+  .day-date-text { font-size: 12px; color: var(--text2); }
+  .detail-section { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px; }
+  .detail-item { display: grid; grid-template-columns: 72px 1fr; gap: 6px; padding: 5px 0; }
+  .detail-label { font-size: 11px; font-weight: 600; color: var(--text2); padding-top: 2px; }
+  .detail-val { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .day-actions { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; flex-wrap: wrap; }
+  .note-area { flex: 1; min-width: 200px; padding: 8px 10px; border: 1px solid var(--border2); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; background: var(--surface2); color: var(--text); resize: none; outline: none; transition: border-color 0.15s; line-height: 1.5; }
+  .note-area:focus { border-color: var(--blue); }
+  .btn { padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--surface); font-size: 13px; font-weight: 500; font-family: inherit; color: var(--text); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+  .btn:hover { background: var(--surface2); }
+  .btn-done { background: var(--green-bg); border-color: #86EFAC; color: var(--green); }
+  .btn-done:hover { background: #D1FAE5; }
+  .btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .btn-primary:hover { background: #1D4ED8; }
+
+  /* Schedule */
+  .week-header { font-size: 12px; font-weight: 600; color: var(--text2); padding: 12px 16px 6px; border-bottom: 1px solid var(--border); background: var(--surface2); letter-spacing: 0.03em; }
+  .sched-row { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; transition: background 0.1s; border-bottom: 1px solid var(--border); }
+  .sched-row:last-child { border-bottom: none; }
+  .sched-row:hover { background: var(--surface2); }
+  .sched-row.today-row { background: var(--blue-bg); }
+  .sched-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .sched-day { font-size: 12px; color: var(--text2); min-width: 30px; font-weight: 500; }
+  .sched-date { font-size: 12px; color: var(--text3); min-width: 38px; }
+  .sched-title { font-size: 13px; color: var(--text); flex: 1; }
+  .sched-done { font-size: 11px; color: var(--green); font-weight: 600; }
+
+  /* Topics */
+  .topic-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  .topic-item:last-child { border-bottom: none; }
+  .topic-item:hover { background: var(--surface2); }
+  .topic-no { width: 28px; height: 28px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text2); flex-shrink: 0; font-weight: 500; }
+  .topic-info { flex: 1; }
+  .topic-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .topic-name.done-name { text-decoration: line-through; color: var(--text3); }
+  .topic-code { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .pri-tag { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  /* Notes */
+  .note-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px 16px; margin-bottom: 8px; box-shadow: var(--shadow); }
+  .note-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 7px; }
+  .note-body { font-size: 13px; color: var(--text2); white-space: pre-wrap; line-height: 1.6; }
+  .empty-state { text-align: center; padding: 48px 0; color: var(--text3); font-size: 14px; }
+  .empty-state span { display: block; font-size: 32px; margin-bottom: 8px; }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; padding: 16px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 22px 24px; max-width: 520px; width: 100%; box-shadow: var(--shadow-md); max-height: 90vh; overflow-y: auto; }
+  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .modal-close { background: none; border: none; font-size: 20px; color: var(--text2); cursor: pointer; padding: 0 4px; line-height: 1; }
+  .modal-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+  .modal-row { padding: 9px 0; border-top: 1px solid var(--border); }
+  .modal-lbl { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
+  .modal-val { font-size: 13px; color: var(--text); line-height: 1.6; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+
+  @media (max-width: 600px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .header-top { flex-direction: column; }
+    .detail-item { grid-template-columns: 60px 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-title">📚 교육전문직 시험 학습 관리</div>
+        <div class="header-sub">1차 시험: 2026년 5월 30일 (토) · 60일 심화 과정</div>
+      </div>
+      <div class="countdown">
+        <div class="countdown-num" id="ddays">-</div>
+        <div class="countdown-lbl">시험까지</div>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-val" id="m-done">0</div><div class="metric-lbl">완료한 날</div></div>
+      <div class="metric"><div class="metric-val" id="m-remain">60</div><div class="metric-lbl">남은 날</div></div>
+      <div class="metric"><div class="metric-val" id="m-pct">0%</div><div class="metric-lbl">전체 진도</div></div>
+      <div class="metric"><div class="metric-val" id="m-topic">0/20</div><div class="metric-lbl">완료 주제</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="progress-text"><span id="prog-left">0일 완료</span><span id="prog-right">60일 남음</span></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('today')">오늘 학습</button>
+    <button class="tab-btn" onclick="switchTab('schedule')">전체 일정</button>
+    <button class="tab-btn" onclick="switchTab('topics')">20개 주제</button>
+    <button class="tab-btn" onclick="switchTab('notes')">메모 모음</button>
+  </div>
+
+  <div id="tab-content"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal" id="modal-inner"></div>
+</div>
+
+<script>
+const EXAM_DATE = new Date('2026-05-30T00:00:00');
+const START_DATE = new Date('2026-03-31T00:00:00');
+
+const PHASES = {
+  P1:   {label:'구조 재정비', color:'#2563EB', bg:'#EFF6FF'},
+  P2_4: {label:'필수 ★★★★',  color:'#BE185D', bg:'#FDF2F8'},
+  P2_3: {label:'필수 ★★★',   color:'#059669', bg:'#ECFDF5'},
+  P2_2: {label:'필수 ★★',    color:'#D97706', bg:'#FFFBEB'},
+  P2_1: {label:'필수 ★',     color:'#7C3AED', bg:'#F5F3FF'},
+  P3:   {label:'통합심화',    color:'#EA580C', bg:'#FFF7ED'},
+  P4:   {label:'최종점검',    color:'#4B5563', bg:'#F3F4F6'},
+};
+
+const S = [
+  [1,'3/31','P1','충남교육 정책 구조 재정비','5대 정책 간 유기적 연계 구조 분석 / 12대 과제와 2030 미래교육 전환과제 연결 맥락','정책 간 중복·충돌 지점 도출 / 충남교육의 구조적 강점과 한계 서술','논술: 2026 충남교육 정책의 연계 구조와 실현 가능성을 비판적으로 논하라'],
+  [2,'4/1','P1','고득점 논술 구조 분석','기출 유형 분류 / 비판적 분석형·정책 제안형·사례 적용형 구분','논술 고득점 전략 개인화 설계 / 자신의 약점 패턴 파악','논술 고득점 기준표 자체 제작 (논리·근거·비판·대안 각 25점)'],
+  [3,'4/2','P1','교육법령 심화 + 판례 분석','교원지위법·학폭법·인성교육법 개정 경과 분석 / 입법 배경과 사회적 맥락','법령 간 충돌 지점(교원권 vs 학생인권) / 판례가 정책에 미친 영향','법령 인용 논술 1편 작성 + 자기 피드백'],
+  [4,'4/3','P1','교육행정·장학론 비판적 검토','장학 패러다임 변화(통제 → 자율·동료장학) / PLC 이론','교원 자율성 vs 책무성 긴장 구조 / 수업장학 실효성 논란','논술: 교육전문직의 장학 역할 변화와 바람직한 방향'],
+  [5,'4/4','P1','Phase 1 집중 정리 + 논술 2편','정책구조·법령·장학론 연계 지식 통합 / 논술 고득점 기준표 완성','교육전문직이 요구하는 정책 분석 역량의 본질 이해','실전 논술 2편(각 50분 타이머) → 자기 채점 → 보완'],
+  [6,'4/5','P2_4','①독서·인문교육 — 배경·맥락','PISA 읽기소양 하락 / 디지털 미디어 확산으로 깊은 읽기 감소 / 독서교육지원법 제정 배경','독서교육 도구화 비판(입시 수단화) / 교육 불평등 재생산(가정 독서환경 격차)','논술 초안: 문해력 위기 시대 학교 독서교육의 방향과 교육전문직의 역할'],
+  [7,'4/6','P2_4','①독서·인문교육 — 쟁점·비판·대안','비판적 읽기·깊은 읽기 / 미디어리터러시 통합 필요성','독서 양 vs 질 논쟁 / 학교도서관 활성화 연계','논술 완성: 배경→쟁점→비판→대안 4단 구조 완성본'],
+  [8,'4/7','P2_4','③기초학력 — 배경·구조 분석','코로나19 이후 학력 격차 실증 / 기초학력보장법(2021) / 두드림학교 vs 충남온학력 차이','최소학력 vs 참학력 개념 충돌 / 충남온학력 3단계 이론적 근거(생태체계이론)','개념 지도: 기초학력 보장 생태체계 구조도'],
+  [9,'4/8','P2_4','③기초학력 — 쟁점·비판·대안','기초학력 진단의 낙인 효과 논쟁 / 지원 체계 현장 작동 한계(교사 업무 과중·농촌 접근성)','개별화 학습지원(IEP 모델) 적용 가능성 / 보정교육 vs 예방교육 우선순위','논술 완성: 기초학력 보장 정책의 성과와 한계, 교육전문직의 과제'],
+  [10,'4/9','P2_3','②AI·디지털교육 — 배경·패러다임','생성형 AI 등장으로 교육 패러다임 전환 / 디지털 격차의 재생산 문제','AI 교육의 목적 논쟁: 활용 능력 vs 비판적 이해 / 교사 AI역량 편차','개념: AI 리터러시 4단계(이해-활용-비판-창조) 프레임 구성'],
+  [11,'4/10','P2_3','②AI·디지털교육 — 쟁점·윤리·대안','AI 윤리교육 / 알고리즘 편향·데이터 프라이버시','학생 데이터 수집 윤리 / AI 보조 수업이 교사 전문성에 미치는 영향','논술 완성: AI 시대 충남형 디지털교육의 방향과 교육전문직의 역할'],
+  [12,'4/11','P2_3','④교육활동 보호 — 법령·구조 분석','교원지위법 개정(2023) / 교육활동 침해 통계·유형별 분석','아동학대 신고 의무와 교원 보호 간 법적 충돌 / 학부모 민원의 교육적 의미와 경계','논술 완성: 교원 교육활동 보호와 학생·학부모 권리 보호의 균형 (2편)'],
+  [13,'4/12','P2_3','⑤민주시민교육 — 이론·구조 심화','Dewey 민주주의 교육론 / Westheimer&Kahne 시민성 3유형','학생인권 조례 논쟁의 본질 / 학생자치의 형식화 비판','논술 완성: 학생자치 실질화를 위한 학교 민주주의 구현 방안'],
+  [14,'4/13','P2_3','⑥사회정서교육 — 이론·근거 심화','SEL CASEL 모델 5대 역량 / 코로나 이후 청소년 정신건강 데이터','Wee 프로젝트 3단계(클래스-센터-스쿨) 기능·한계 / 학교상담 전문성 논쟁','이론 적용 논술 초안: CASEL 모델을 근거로 한 충남 SEL 정책 제안'],
+  [15,'4/14','P2_3','⑥사회정서교육 — 쟁점·비판·대안','SEL 교과 통합 vs 별도 프로그램 논쟁 / 교사의 감정노동 소진 역설','마음건강 지원 탈의료화 논쟁 / 또래 지지 프로그램 효과와 한계','논술 완성: CASEL 이론을 적용한 학교 SEL 내실화 방안'],
+  [16,'4/15','P2_3','⑦학맞통 — 구조·쟁점','생태체계이론(Bronfenbrenner) / 위기학생 유형별 지원 프로세스','통합지원팀 역할 경계 모호성 / 교육-복지-의료 연계의 구조적 어려움','논술: 취약계층 학생을 위한 교육-복지 연계 통합지원 체계의 방향'],
+  [17,'4/16','P2_3','⑧작은학교 — 지역소멸 연계 분석','인구감소·지역소멸과 통폐합 논쟁의 역사 / 소규모학교 교육적 장점 연구','통폐합 vs 유지·강화 정책 핵심 가치 충돌 / 농촌 지역사회와 학교의 관계','논술 완성: 지역소멸 시대 작은학교 경쟁력 강화 방안과 교육전문직의 역할'],
+  [18,'4/17','P2_4','★①③ 비교 심화 + 연계 논술','독서·인문교육 ↔ 기초학력의 연계 지점 분석 / 문해력 매개 정책 통합 가능성','두 정책의 대상·방법·평가 차이와 보완 관계 / 통합 운영 시 교육전문직의 과제','연계 논술: 기초학력과 독서교육을 통합한 맞춤학력 지원 방안'],
+  [19,'4/18','P2_3','★②④⑤ 비교 심화','AI교육·교육활동보호·민주시민교육 — 학교 환경 변화 공통 배경','AI교육과 민주시민교육의 긴장 / 교육활동 보호와 학생인권의 균형','복합 논술 2편: 변화하는 학교 환경에서 교육전문직의 역할'],
+  [20,'4/19','P2_3','★⑥⑦⑧ 비교 심화','사회정서교육·학맞통·작은학교 — 공통: 교육 안전망·포용','3개 정책의 대상 학생 중복 문제 / 농촌 지역 시너지와 한계','통합 논술: 교육 취약계층을 위한 충남 교육 안전망의 구조와 과제'],
+  [21,'4/20','P2_2','⑨인성교육 — 이론·비판','인성교육진흥법(2014 세월호 계기) / 핵심 덕목 8가지의 이론적 근거','덕목 주입 비판 / 인성과 역량 기반 교육의 관계','논술: 덕목 중심 인성교육의 한계를 넘어서는 통합적 인성교육 방안'],
+  [22,'4/21','P2_2','⑩학교폭력 — 패러다임 전환','학폭예방법 개정 경과 / 사안처리 절차의 사법화 논쟁','응보적 정의 vs 회복적 정의 패러다임 / 경미한 학폭의 과도한 사법 처리 비판','논술: 회복적 정의 관점에서 학교폭력 대응 방안'],
+  [23,'4/22','P2_2','⑪온돌봄 — 복지·교육 연계','돌봄 수요 폭증 배경 / 공적 돌봄 확대 / 학교돌봄 vs 마을돌봄','학교의 돌봄 역할 확대로 인한 교육적 정체성 혼란 / 돌봄 노동자 처우 문제','논술: 학교와 지역사회가 함께하는 충남 온돌봄의 방향과 과제'],
+  [24,'4/23','P2_2','⑫다문화·세계시민 — 이론·현장','상호문화교육 이론(mono→multi→interculturalism) / UNESCO 세계시민교육 프레임','동화주의 vs 다원주의 / KSL 지원 한계 / 비이주배경 학생 대상 교육 부족','논술: 상호문화교육 관점에서 충남 다문화교육 정책의 방향'],
+  [25,'4/24','P2_2','★⑨~⑫ 비교·연계 분석','인성·학폭·돌봄·다문화 — 공통 키워드: 공동체·관계·포용','4개 정책의 연계 가능성 / 학교문화 개선 통합 목표','비교 논술: 공동체 교육 관점에서 인성·학폭·돌봄·다문화의 통합적 접근'],
+  [26,'4/25','P2_1','⑬생태전환교육 — 철학·과학','기후위기의 교육적 의미 / 생태철학 / 탄소중립 국가 목표(2050)','생태불안(eco-anxiety) 다루기 / 행동 없는 인식 교육 비판','논술: 기후위기 시대 학교 생태전환교육의 방향'],
+  [27,'4/26','P2_1','⑭⑮ 업무경감 + 수업혁신','업무경감 역설(경감해도 새 업무 발생) / 학교지원센터 기능·한계','과정중심평가 신뢰성·객관성 논쟁 / IB 도입 논쟁','논술: 교원 수업 전문성 강화를 위한 업무경감과 장학 지원 방안'],
+  [28,'4/27','P2_1','⑯역사교육 — 쟁점·교육과정','역사교육의 정치적 성격 / 독도교육·평화통일교육의 민감성','민족주의 역사관 vs 세계시민 역사관 긴장 / 역사 교과서 논쟁 맥락','논술: 비판적 역사 사고력 함양을 위한 역사교육 방향'],
+  [29,'4/28','P2_1','⑰유보통합 — 구조·쟁점·전망','유보통합 추진 경과(2023 부처 이관) / 유아교육법·영유아보육법 이원 체계','교육부 일원화 이후 현장 갈등 / 어린이집 vs 유치원 처우 격차','논술: 유보통합의 쟁점과 질 높은 영유아교육 실현을 위한 방안'],
+  [30,'4/29','P2_1','⑱학업중단·대안교육','학업중단 원인의 다층성 / 학교 밖 청소년 지원 체계','대안교육 제도화 논쟁 / 위탁교육의 낙인 효과','논술: 학업중단 청소년을 위한 교육 안전망 구축 방안'],
+  [31,'4/30','P2_1','⑲민주적 학교문화·교육협력','숙의민주주의 이론 / 학교운영위원회 기능·한계 분석','3주체 권력 관계 / 형식적 참여 vs 실질적 협치','논술: 실질적 학교자치를 위한 민주적 학교문화 조성 방안'],
+  [32,'5/1','P2_1','⑳진로·직업교육 — 미래노동 연계','AI 자동화·직업 소멸·신직업 등장 / 미래 직업 환경 변화','직업계고 위상 저하 / 진로 자기결정성 침해 우려','논술: 미래 노동 환경 변화에 대응하는 진로·직업교육의 방향'],
+  [33,'5/2','P2_4','★교육과정·수업·평가 통합 분석','2022 개정 교육과정 역량 기반 전환 / 학교자율시간의 교육적 의미','역량 평가 공정성 / 교사 자율화의 역설(자율=부담 증가?)','심화 논술: 역량 기반 교육과정 구현을 위한 수업·평가 혁신 방향'],
+  [34,'5/3','P2_3','★교육격차·복지 통합 분석','교육불평등 구조적 원인 / Coleman 보고서부터 현재까지','교육복지 권리 기반 vs 시혜적 접근 패러다임 전환','통합 논술: 교육기회 평등 실현을 위한 충남 교육복지 정책 방향'],
+  [35,'5/4','P2_3','★교원 전문성·역할 변화 종합','교원 다중 역할 요구 과부하 / PLC 이론','교육전문직 조력·지원·코칭 패러다임 전환','논술: 학교 교육력 제고를 위한 교육전문직의 역할 재정립'],
+  [36,'5/5','P2_2','★마을교육공동체 이론·실천','마을교육공동체 이론 / 학교-지역사회 연계 사례','행정 주도 vs 주민 자생 방식 논쟁 / 지속가능성 문제','논술: 지역과 함께하는 마을교육공동체 활성화 방안'],
+  [37,'5/6','P2_1','★교육자치·분권화 정책 분석','교육자치 이론 / 교육감 직선제의 의미와 한계','자율성 확대 vs 공공성·평등성 긴장 구조','논술: 교육자치 강화와 교육 공공성 실현을 위한 행정 방향'],
+  [38,'5/7','P2_3','★디지털 전환과 학교교육 변화','에듀테크 활용 현황·한계 / 온라인 공동교육과정 효과','교사-학생 관계 변화 / 교실의 디지털 양극화','논술: 디지털 전환 시대 학교교육의 변화와 교육전문직의 대응'],
+  [39,'5/8','P2_4','★학생 주도성(agency) 이론·실천','OECD 교육 2030 학생 행위주체성 / 협력적 주도성','자율=방임 역설 / 교사 역할 축소 우려','논술: 학생 주도성 함양을 위한 교육과정·수업·문화의 통합적 접근'],
+  [40,'5/9','P2_4','필수주제 ①~⑩ 심화 종합 복습','핵심 논점(배경-쟁점-비판-대안) 압축 재정리','주제 간 연계 지점 재확인 / 약점 주제 집중 보완','모의 논술 2편(각 50분) / 이론 인용·근거 제시 중심 자기 채점'],
+  [41,'5/10','P2_4','필수주제 ⑪~⑳ 심화 종합 복습','이론 근거 목록(이론가·법령·연구) 최종 정리','약점 주제 집중 보완','모의 논술 2편(각 50분)'],
+  [42,'5/11','P2_3','★포용적 교육(inclusive) 통합 분석','UNESCO 포용교육 / 통합교육 vs 분리교육 논쟁','보편적 학습설계(UDL) 적용 가능성 / 충남 포용교육 현황','논술: 모든 학생을 위한 포용적 교육 실현 방향'],
+  [43,'5/12','P2_3','★교육 거버넌스·협력 생태계','교육 거버넌스 이론 / 학교-교육청-지자체-지역사회 협력','교육청 역할: 규제·감독 → 지원·촉진 / 협력적 거버넌스의 조건','논술: 지역교육 발전을 위한 교육 거버넌스 구축 방안'],
+  [44,'5/13','P2_4','Phase 2 마무리 — 20개 주제 자기점검','각 주제별 배경·쟁점·비판·대안·이론 완비 여부 점검','미완성 주제 추출 → 집중 보완 계획','약점 주제 목록 추출 → Phase 3 맞춤 계획 수립'],
+  [45,'5/14','P3','행복교육 vs 미래교육 비교 논술','행복교육(내면 성장) vs 미래교육(역량·적응)의 철학적 긴장','이론 근거: Dewey 교육 목적론 vs 역량 기반 교육론','심화 논술: 행복교육과 미래교육의 통합적 실현을 위한 방향'],
+  [46,'5/15','P3','교육 평등 vs 수월성 비교 논술','기초학력 보장(평등) vs 영재교육(수월성) 긴장','Rawls 정의론 / Coleman 교육기회 평등론','심화 논술: 교육 평등과 수월성의 균형 실현 방향'],
+  [47,'5/16','P3','교원 자율성 vs 책무성 비교 논술','자율적 전문성 발현 vs 공적 책무성 요구 긴장','Hargreaves 교직 전문성 4단계 / Fullan 교육 변화론','심화 논술 2편: 자율과 책무의 균형 위에서 교원 전문성 강화'],
+  [48,'5/17','P3','학교 표준화 vs 다양화 논술','교육과정 표준화 vs 학교자율시간·고교학점제 자율화','Apple 교육과정 정치학 / Eisner 교육적 상상력','심화 논술 2편: 교육과정 다양화와 교육 공공성 실현의 균형'],
+  [49,'5/18','P3','실전 모의고사 1회 — 고난도','20개 필수주제 랜덤 2개 → 완전 실전 논술(50분×2편)','이론 근거·법령 인용·비판적 분석·대안 제시 전 요소 포함 채점','자기 채점: 논리구조(25)+근거의 질(25)+비판적 시각(25)+대안 타당성(25)'],
+  [50,'5/19','P3','모의고사 1회 보완 + 약점 집중','전날 모의논술 심층 피드백 / 논거 부족 부분 자료 보완','보완 논술 재작성(동일 논제) + 비교 분석','완성본 vs 초안 비교 → 개선 포인트 목록화'],
+  [51,'5/20','P3','교육전문직 직무 역량 심화','장학사 직무 범위·역할 / 장학 계획 수립·운영 실무','교육과정 컨설팅·수업장학·연수 운영 전문성','논술: 교육전문직(장학사)의 역할과 자질'],
+  [52,'5/21','P3','실전 모의고사 2회','고난도 복합 논제 2개 실전 작성','시간 관리: 구상 10분 + 작성 35분 + 검토 5분','자기 채점 + 핵심 보완 포인트 추출'],
+  [53,'5/22','P3','2026 최신 교육 시사 업데이트','충남교육청 최신 정책 발표·보도자료 정리','시사 이슈를 논술 근거로 활용하는 기법','시사 연계 논술 1편'],
+  [54,'5/23','P3','실전 모의고사 3회 + 전체 압축 정리','고난도 논제 2편 실전 작성','핵심 암기카드(20주제×5포인트) 완성','최종 요약본 완성 확인'],
+  [55,'5/24','P3','전체 심화 내용 최종 점검','20개 주제 배경-쟁점-비판-대안-이론 구조 최종 점검','취약 주제 마지막 보완 / 논술 구조 재점검','모의 논술 1편 + 자신감 점검'],
+  [56,'5/25','P4','오답 노트 최종 점검','전체 기간 약점 주제·논술 오류 패턴 최종 확인','반복 실수 유형: 논리 구조 / 근거 빈약 / 비판 부재 / 대안 불명확','핵심 보완 완료 확인'],
+  [57,'5/26','P4','이론·법령 최종 암기','논술 인용 이론가 10명 + 핵심 개념 최종 확인','법령-정책-이론의 연결 고리 최종 정리','암기 완료 자기 확인'],
+  [58,'5/27','P4','예상 논제 파이널 대응','예상 논제 10개 → 각 논제별 핵심 논거 3가지 즉시 서술 연습','논제 유형별 대응 패턴(비교형·제안형·비판형) 최종 확인','서론 첫 문장 10개 미리 준비'],
+  [59,'5/28','P4','가벼운 복습 + 컨디션 관리','핵심 요약본 가볍게 1회독 / 새로운 학습 금지','충분한 수면·식사·운동으로 컨디션 최고점 유지','심리적 안정 + 자신감 유지'],
+  [60,'5/29','P4','시험 전날 최종 준비','핵심 요약본 마지막 1회독','시험장·준비물·경로 최종 확인 / 논술 서론 첫 문장 패턴 시뮬레이션','이른 취침 — 내일은 합격! 🎯'],
+];
+
+const TOPICS = [
+  {no:1,t:'독서·인문교육',p:'★★★★',c:'1-2-2'},
+  {no:2,t:'기초학력(맞춤학력) 책임교육',p:'★★★★',c:'1-2-1'},
+  {no:3,t:'AI·디지털교육',p:'★★★',c:'2-1-6'},
+  {no:4,t:'교육활동 보호',p:'★★★',c:'4-3-4'},
+  {no:5,t:'민주시민교육(학생인권·자치)',p:'★★★',c:'3-1-1'},
+  {no:6,t:'사회정서교육(학생 정신건강)',p:'★★★',c:'3-1-5'},
+  {no:7,t:'학생맞춤통합지원(학맞통)',p:'★★★',c:'4-1-5/6'},
+  {no:8,t:'작은학교 경쟁력 강화',p:'★★★',c:'2-3-3'},
+  {no:9,t:'인성교육',p:'★★',c:'3-1-3'},
+  {no:10,t:'학교폭력예방교육',p:'★★',c:'3-1-7'},
+  {no:11,t:'온돌봄',p:'★★',c:'1-3-2'},
+  {no:12,t:'다문화·세계시민교육',p:'★★',c:'3-2-2'},
+  {no:13,t:'환경·생태전환교육',p:'★',c:'3-3-1/2'},
+  {no:14,t:'학교업무경감 및 학교지원센터',p:'★',c:'4-3-1'},
+  {no:15,t:'학생 평가 및 수업혁신',p:'★',c:'1-1-5'},
+  {no:16,t:'역사교육',p:'★',c:'3-1-2'},
+  {no:17,t:'유보통합',p:'★',c:'4-1-2'},
+  {no:18,t:'학업중단 예방 및 대안교육',p:'★',c:'3-1-4'},
+  {no:19,t:'민주적 학교문화와 교육협력 강화',p:'-',c:'1-3-4'},
+  {no:20,t:'진로·직업교육',p:'-',c:'2-2-1~6'},
+];
+
+const PRI_STYLE = {
+  '★★★★':{bg:'#FDF2F8',color:'#9D174D'},
+  '★★★': {bg:'#ECFDF5',color:'#065F46'},
+  '★★':  {bg:'#FFFBEB',color:'#92400E'},
+  '★':   {bg:'#F5F3FF',color:'#4C1D95'},
+  '-':   {bg:'#F3F4F6',color:'#374151'},
+};
+
+let APP = {
+  tab: 'today',
+  completed: {},
+  notes: {},
+  topicDone: {},
+};
+
+function load() {
+  try {
+    const s = localStorage.getItem('exam_study_v2');
+    if (s) { const d = JSON.parse(s); APP = {...APP, ...d}; }
+  } catch(e) {}
+}
+function save() {
+  try { localStorage.setItem('exam_study_v2', JSON.stringify(APP)); } catch(e) {}
+}
+
+function todayDayNum() {
+  const t = new Date(); t.setHours(0,0,0,0);
+  const d = Math.floor((t - START_DATE) / 86400000) + 1;
+  return Math.min(Math.max(d,1),60);
+}
+function daysLeft() {
+  const t = new Date(); t.setHours(0,0,0,0);
+  const e = new Date(EXAM_DATE); e.setHours(0,0,0,0);
+  return Math.ceil((e-t)/86400000);
+}
+function getPhase(code) { return PHASES[code] || PHASES.P1; }
+function doneCount() { return Object.values(APP.completed).filter(Boolean).length; }
+function topicDoneCount() { return Object.values(APP.topicDone).filter(Boolean).length; }
+
+function updateHeader() {
+  const done = doneCount(); const pct = Math.round(done/60*100);
+  document.getElementById('ddays').textContent = 'D-' + daysLeft();
+  document.getElementById('m-done').textContent = done;
+  document.getElementById('m-remain').textContent = 60-done;
+  document.getElementById('m-pct').textContent = pct+'%';
+  document.getElementById('m-topic').textContent = topicDoneCount()+'/20';
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-left').textContent = done+'일 완료';
+  document.getElementById('prog-right').textContent = (60-done)+'일 남음';
+}
+
+function switchTab(id) {
+  APP.tab = id;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    b.classList.toggle('active', ['today','schedule','topics','notes'][i]===id);
+  });
+  renderTab();
+}
+
+function renderTab() {
+  const el = document.getElementById('tab-content');
+  if(APP.tab==='today') renderToday(el);
+  else if(APP.tab==='schedule') renderSchedule(el);
+  else if(APP.tab==='topics') renderTopics(el);
+  else renderNotes(el);
+  updateHeader();
+}
+
+function renderToday(el) {
+  const td = todayDayNum();
+  const days = [Math.max(1,td-1), td, Math.min(60,td+1)];
+  el.innerHTML = days.map(d => {
+    const [num,date,pc,title,bg,issue,essay] = S[d-1];
+    const ph = getPhase(pc); const isDone = APP.completed[num]; const isToday = d===td;
+    return `
+    <div class="day-card${isToday?' current':''}${isDone?' done-card':''}${!isToday?' faded':''}">
+      <div class="day-head">
+        <div class="day-badge" style="background:${ph.bg};color:${ph.color}">D${num}</div>
+        ${isToday?'<span class="today-label">오늘</span>':''}
+        <span class="phase-tag" style="background:${ph.bg};color:${ph.color}">${ph.label}</span>
+        <span class="day-date-text">${date}</span>
+        <div style="flex:1"></div>
+        ${isToday?`<button class="btn${isDone?' btn-done':''}" onclick="toggleDay(${num})">${isDone?'✓ 완료됨':'완료 체크'}</button>`:''}
+      </div>
+      <div class="day-title-text">${title}</div>
+      <div class="detail-section">
+        <div class="detail-item"><div class="detail-label">배경·맥락</div><div class="detail-val">${bg}</div></div>
+        <div class="detail-item"><div class="detail-label">핵심 쟁점</div><div class="detail-val" style="color:#DC2626">${issue}</div></div>
+        <div class="detail-item"><div class="detail-label">논술 과제</div><div class="detail-val">${essay}</div></div>
+      </div>
+      ${isToday?`<div class="day-actions">
+        <textarea class="note-area" rows="2" placeholder="오늘 학습 메모 (배운 것, 느낀 점, 보완할 것...)" id="note-${num}">${APP.notes[num]||''}</textarea>
+        <button class="btn btn-primary" onclick="saveNote(${num})">저장</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderSchedule(el) {
+  let html = '<div class="card">';
+  let week = 0;
+  S.forEach(([num,date,pc,title]) => {
+    const w = Math.ceil(num/7);
+    if(w!==week){ week=w; html+=`<div class="week-header">${w}주차</div>`; }
+    const ph = getPhase(pc); const isDone = APP.completed[num]; const isToday = num===todayDayNum();
+    html += `<div class="sched-row${isToday?' today-row':''}" onclick="openModal(${num})">
+      <div class="sched-dot" style="background:${isDone?'#059669':ph.color}"></div>
+      <span class="sched-day">D${num}</span>
+      <span class="sched-date">${date}</span>
+      <span class="sched-title">${title}</span>
+      <span class="phase-tag" style="background:${ph.bg};color:${ph.color};font-size:11px;padding:2px 7px">${ph.label}</span>
+      ${isDone?'<span class="sched-done">완료</span>':''}
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderTopics(el) {
+  const done = topicDoneCount();
+  let html = `<div class="card">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:14px;font-weight:600">필수 20개 주제</span>
+      <span style="font-size:13px;color:var(--text2)">${done}/20 완료</span>
+    </div>`;
+  TOPICS.forEach(({no,t,p,c}) => {
+    const isDone = APP.topicDone[no]; const ps = PRI_STYLE[p];
+    html += `<div class="topic-item">
+      <div class="topic-no">${no}</div>
+      <div class="topic-info">
+        <div class="topic-name${isDone?' done-name':''}">${t}</div>
+        <div class="topic-code">${c}</div>
+      </div>
+      <span class="pri-tag" style="background:${ps.bg};color:${ps.color}">${p}</span>
+      <button class="btn btn-sm${isDone?' btn-done':''}" onclick="toggleTopic(${no})">${isDone?'완료':'미완료'}</button>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderNotes(el) {
+  const entries = Object.entries(APP.notes).filter(([,v])=>v.trim());
+  if(!entries.length){ el.innerHTML='<div class="empty-state"><span>📝</span>아직 작성된 메모가 없어요.<br>오늘 학습 탭에서 메모를 남겨보세요.</div>'; return; }
+  el.innerHTML = entries.sort((a,b)=>+a[0]-+b[0]).map(([num,note])=>{
+    const row = S[+num-1]; if(!row) return '';
+    const [n,date,pc,title] = row; const ph = getPhase(pc);
+    return `<div class="note-card">
+      <div class="note-meta">
+        <span style="font-size:12px;color:var(--text2);font-weight:500">D${n} · ${date}</span>
+        <span class="phase-tag" style="background:${ph.bg};color:${ph.color};font-size:11px;padding:2px 7px">${ph.label}</span>
+        <span style="font-size:13px;font-weight:500">${title}</span>
+      </div>
+      <div class="note-body">${note}</div>
+    </div>`;
+  }).join('');
+}
+
+function openModal(num) {
+  const [n,date,pc,title,bg,issue,essay] = S[num-1];
+  const ph = getPhase(pc); const isDone = APP.completed[num];
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-header">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="phase-tag" style="background:${ph.bg};color:${ph.color}">D${n} · ${date}</span>
+        <span class="phase-tag" style="background:${ph.bg};color:${ph.color}">${ph.label}</span>
+      </div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-title">${title}</div>
+    <div class="modal-row"><div class="modal-lbl">배경·맥락</div><div class="modal-val">${bg}</div></div>
+    <div class="modal-row"><div class="modal-lbl">핵심 쟁점</div><div class="modal-val" style="color:#DC2626">${issue}</div></div>
+    <div class="modal-row"><div class="modal-lbl">논술 과제</div><div class="modal-val">${essay}</div></div>
+    <textarea class="note-area" rows="3" placeholder="메모..." id="modal-note" style="margin-top:12px;width:100%">${APP.notes[num]||''}</textarea>
+    <div class="modal-footer">
+      <button class="btn${isDone?' btn-done':''}" onclick="toggleDayModal(${num})">${isDone?'✓ 완료 취소':'완료 체크'}</button>
+      <button class="btn btn-primary" onclick="saveModalNote(${num})">메모 저장</button>
+    </div>`;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function toggleDay(num) { APP.completed[num]=!APP.completed[num]; save(); renderTab(); }
+function toggleDayModal(num) { APP.completed[num]=!APP.completed[num]; save(); closeModal(); renderTab(); }
+function toggleTopic(no) { APP.topicDone[no]=!APP.topicDone[no]; save(); renderTopics(document.getElementById('tab-content')); updateHeader(); }
+function saveNote(num) { const el=document.getElementById('note-'+num); if(el){APP.notes[num]=el.value; save(); alert('메모가 저장되었어요.');} }
+function saveModalNote(num) { const el=document.getElementById('modal-note'); if(el){APP.notes[num]=el.value; save(); closeModal(); alert('메모가 저장되었어요.');} }
+
+document.getElementById('modal').addEventListener('click',e=>{ if(e.target===document.getElementById('modal')) closeModal(); });
+
+load();
+updateHeader();
+renderTab();
+
+// 페이지 타이틀 D-day 업데이트
+document.title = `D-${daysLeft()} | 교육전문직 학습 관리`;
+</script>
+</body>
+</html>
